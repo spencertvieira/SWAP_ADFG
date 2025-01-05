@@ -1,0 +1,21 @@
+# Ignore raw and processed data
+data/raw/
+data/processed/
+data/outputs/
+
+# Ignore temporary and intermediate files
+*.tmp
+*.log
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore large binary files
+*.tif
+*.csv
+*.rds
+
+# Ignore system or editor-specific files
+.DS_Store
+.Rproj.user/
+
