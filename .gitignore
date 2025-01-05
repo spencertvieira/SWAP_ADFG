@@ -2,6 +2,7 @@
 data/raw/
 data/processed/
 data/outputs/
+data/resources/
 
 # Ignore temporary and intermediate files
 *.tmp
@@ -14,6 +15,16 @@ data/outputs/
 *.tif
 *.csv
 *.rds
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.qpj
+
+
+
+
 
 # Ignore system or editor-specific files
 .DS_Store
