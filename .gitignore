@@ -1,6 +1,4 @@
-# Do not ignore raw and processed data folders
-# Allow LFS-tracked files in these folders
-# (Removed: data/raw/, data/processed/, data/outputs/, data/resources/)
+
 
 # Ignore temporary and intermediate files
 *.tmp
@@ -9,12 +7,8 @@
 # Ignore Jupyter notebook checkpoints
 .ipynb_checkpoints/
 
-# Ignore shapefile auxiliary files not tracked by LFS
-*.shx
-*.dbf
-*.prj
-*.cpg
-*.qpj
+# Any files to ignore files not tracked by LFS (use *.____)
+
 
 # Ignore system or editor-specific files
 .DS_Store
