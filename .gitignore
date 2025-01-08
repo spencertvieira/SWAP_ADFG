@@ -1,8 +1,12 @@
-# Ignore raw and processed data
+# Ignore raw and processed data (except files tracked by Git LFS)
 data/raw/
 data/processed/
 data/outputs/
 data/resources/
+
+# Do not ignore large binary files tracked by Git LFS
+# (remove patterns for *.tif, *.csv, *.rds, *.shp, etc.)
+# These are now managed by Git LFS.
 
 # Ignore temporary and intermediate files
 *.tmp
@@ -11,22 +15,13 @@ data/resources/
 # Ignore Jupyter notebook checkpoints
 .ipynb_checkpoints/
 
-# Ignore large binary files
-*.tif
-*.csv
-*.rds
-*.shp
+# Ignore shapefile auxiliary files not tracked by LFS
 *.shx
 *.dbf
 *.prj
 *.cpg
 *.qpj
 
-
-
-
-
 # Ignore system or editor-specific files
 .DS_Store
 .Rproj.user/
-
