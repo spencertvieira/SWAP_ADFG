@@ -1,12 +1,6 @@
-# Ignore raw and processed data (except files tracked by Git LFS)
-data/raw/
-data/processed/
-data/outputs/
-data/resources/
-
-# Do not ignore large binary files tracked by Git LFS
-# (remove patterns for *.tif, *.csv, *.rds, *.shp, etc.)
-# These are now managed by Git LFS.
+# Do not ignore raw and processed data folders
+# Allow LFS-tracked files in these folders
+# (Removed: data/raw/, data/processed/, data/outputs/, data/resources/)
 
 # Ignore temporary and intermediate files
 *.tmp
