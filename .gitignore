@@ -1,0 +1,78 @@
+# Ignore temporary and intermediate files
+*.tmp
+*.log
+*.err
+*.out
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore system or editor-specific files
+.DS_Store
+.Rproj.user/
+
+# Ignore large file types (NetCDF, raster, binary, and compressed files)
+*.nc
+*.tif
+*.tiff
+*.hdf
+*.h5
+*.grib
+*.grb
+*.grib2
+*.zip
+*.tar
+*.gz
+*.bz2
+*.xz
+*.7z
+
+# Ignore large text-based outputs
+*.csv
+*.tsv
+*.json
+
+# Ignore shapefile components (shapefiles often contain many associated files)
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.qpj
+*.sbn
+*.sbx
+*.shp.xml
+
+# Ignore GIS project files
+*.gdb
+*.gpkg
+*.geojson
+
+# Ignore image files (large raster exports, plots)
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.svg
+*.pdf
+
+# Ignore binaries and compiled files
+*.exe
+*.dll
+*.o
+*.so
+*.a
+*.out
+
+# Ignore large numerical datasets
+*.mat
+*.sav
+*.pkl
+
+# Ignore backup and checkpoint files
+*.bak
+*.old
+*.swp
+*.swo
+
+# Any files to ignore files not tracked by LFS (use *.____)
