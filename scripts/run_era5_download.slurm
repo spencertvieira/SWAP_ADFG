@@ -35,7 +35,7 @@ fi
 VARIABLE=$1
 START_YEAR=$2
 END_YEAR=$3
-SHAPEFILE_PATH="/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/data/resources/bounding_box.shp"
+SHAPEFILE_PATH="/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/data/resources/BiogeographicRegions_AKSWAP_ABRedited_edited_clipped_again_again_again_again_again_again.shp"
 
 # Verify the shapefile exists
 if [ ! -f "$SHAPEFILE_PATH" ]; then
@@ -51,6 +51,6 @@ echo "  End Year: $END_YEAR"
 echo "  Shapefile: $SHAPEFILE_PATH"
 
 # Run the Python script
-python /beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/scripts/preprocessing/download_era5.py \
+python /beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/scripts/download_era5.py \
     --variable "$VARIABLE" --start_year "$START_YEAR" --end_year "$END_YEAR" \
     --shapefile "$SHAPEFILE_PATH"

@@ -1,99 +1,144 @@
 import xarray as xr
 import rioxarray
 from rasterio.enums import Resampling
+import pandas as pd
 import os
 
-# Mapping of variable names to NetCDF variable names
+# Define seasons
+SEASONS = {
+    "DJF": [12, 1, 2],
+    "MAM": [3, 4, 5],
+    "JJA": [6, 7, 8],
+    "SON": [9, 10, 11],
+    "Annual": list(range(1, 13)),
+    "MJJAS": [5, 6, 7, 8, 9],
+    "ONDJFMAM": [10, 11, 12, 1, 2, 3, 4, 5],
+}
+
+# Mapping of human-readable variable names to NetCDF variable names
 VARIABLE_MAP = {
     "2m_temperature": "t2m",
     "total_precipitation": "tp",
+    "snowfall": "sf",
+    "evaporation": "e",
+    "10m_u_component_of_wind": "u10",
+    "10m_v_component_of_wind": "v10",
+    "sea_surface_temperature": "sst",
 }
 
-# Variables to be converted from meters to millimeters
-CONVERT_TO_MM = ["total_precipitation"]
+# Variables that require unit conversion
+CONVERT_TO_MM = ["total_precipitation", "snowfall", "evaporation"]
+CONVERT_TO_C = ["2m_temperature", "sea_surface_temperature"]
 
-def generate_monthly_rasters(netcdf_dir, variable, output_dir, year_range):
-    netcdf_variable_name = VARIABLE_MAP.get(variable, variable)
+def generate_seasonal_raster(netcdf_file, variable, season, output_dir):
+    """ Generates a seasonal raster from a NetCDF file. """
+
+    # Validate inputs
+    if not os.path.exists(netcdf_file):
+        raise FileNotFoundError(f"NetCDF file not found: {netcdf_file}")
+
+    if variable not in VARIABLE_MAP:
+        raise ValueError(f"Variable '{variable}' not recognized.")
+
+    if season not in SEASONS:
+        raise ValueError(f"Season '{season}' is not valid.")
+
+    netcdf_variable_name = VARIABLE_MAP[variable]
     os.makedirs(output_dir, exist_ok=True)
 
-    years = range(year_range[0], year_range[1] + 1)
+    print(f"Processing file: {netcdf_file}")
 
-    for year in years:
-        netcdf_file = os.path.join(netcdf_dir, f"{variable}_{year}.nc")
-        if not os.path.exists(netcdf_file):
-            print(f"NetCDF file for year {year} not found: {netcdf_file}")
-            continue
+    # Load the dataset
+    ds = xr.open_dataset(netcdf_file)
+    data = ds[netcdf_variable_name]
 
-        print(f"Processing file: {netcdf_file}")
-        data = xr.open_dataset(netcdf_file, chunks={"latitude": 100, "longitude": 100})[netcdf_variable_name]
+    print("Original Data Summary:")
+    print(data)
 
-        print("Original Data:")
-        print(data)
-        print("Value range before processing:", data.min().values, data.max().values)
+    print("Value range before processing:", data.min().values, data.max().values)
 
-        # Convert temperature from Kelvin to Celsius
-        if variable == "2m_temperature":
-            data -= 273.15
+    # Detect the correct time dimension
+    time_dim = None
+    for possible_time in ["valid_time", "time"]:
+        if possible_time in data.coords:
+            time_dim = possible_time
+            break
 
-        # Convert cumulative variables
-        if variable in CONVERT_TO_MM:
-            if "m" in data.attrs.get("units", "").lower():
-                data *= 1000
+    if time_dim is None:
+        raise KeyError("No valid time coordinate found in the dataset.")
 
-        print("Value range after unit conversion:", data.min().values, data.max().values)
+    print(f"Using time dimension: {time_dim}")
 
-        # Handle nodata values
-        nodata_value = data.encoding.get("_FillValue", float("nan"))
-        data = data.where(data != nodata_value)
+    # Ensure `valid_time` is treated as a datetime index
+    if time_dim == "valid_time":
+        data = data.assign_coords(valid_time=pd.to_datetime(data["valid_time"].values))
 
-        # Set CRS for the NetCDF (assumes EPSG:4326 for ERA5)
-        data = data.rio.write_crs("EPSG:4326")
+    # Debugging: Check available time values
+    print(f"Checking available {time_dim} values: {data[time_dim].values}")
+    print(f"Checking available {time_dim} months: {data[time_dim].dt.month.values}")
 
-        # Reproject to EPSG:3338 using nearest-neighbor resampling
-        data_3338 = data.rio.reproject(
-            "EPSG:3338",
-            resolution=(1000, 1000),
-            resampling=Resampling.nearest
-        )
+    # Select the months corresponding to the season
+    months = SEASONS[season]
 
-        print("Value range after reprojection:", data_3338.min().values, data_3338.max().values)
+    if hasattr(data[time_dim], "dt"):
+        seasonal_subset = data.sel({time_dim: data[time_dim].dt.month.isin(months)})
+    else:
+        print(f"Warning: {time_dim} does not support datetime accessor `dt`. Skipping processing.")
+        return
 
-        for month in range(1, 13):
-            monthly_data = data_3338.sel(valid_time=data_3338["valid_time.month"] == month)
+    # Compute seasonal mean
+    seasonal_stat = seasonal_subset.mean(dim=time_dim, skipna=True)
 
-            print(f"Monthly Data for {year}-{month:02d}:")
-            print("Shape:", monthly_data.shape)
-            print("Value range:", monthly_data.min().values, monthly_data.max().values)
+    # Convert units if necessary
+    if variable in CONVERT_TO_C:
+        seasonal_stat -= 273.15  # Convert Kelvin to Celsius
 
-            if monthly_data.size == 0 or monthly_data.isnull().all():
-                print(f"No valid data for {year}-{month:02d}")
-                continue
+    if variable in CONVERT_TO_MM:
+        seasonal_stat *= 1000 * 31  # Convert meters to mm and adjust for days
 
-            output_raster = os.path.join(output_dir, f"{variable}_{year}_{month:02d}.tif")
+    print("Value range after unit conversion:", seasonal_stat.min().values, seasonal_stat.max().values)
 
-            # Write the raster with explicit nodata and data type
-            print(f"Saving raster for {year}-{month:02d} to {output_raster}")
-            monthly_data.rio.to_raster(
-                output_raster,
-                nodata=nodata_value or -9999,  # Use source nodata or default to -9999
-                dtype="float32"
-            )
-            print(f"Raster saved: {output_raster}")
+    # Assign CRS if missing
+    if seasonal_stat.rio.crs is None:
+        print("Assigning CRS EPSG:4326 to NetCDF data.")
+        seasonal_stat = seasonal_stat.rio.write_crs("EPSG:4326")
 
-            # Debug the written raster
-            from rasterio import open as rio_open
-            with rio_open(output_raster) as src:
-                print("Output raster info:")
-                print("Shape:", src.shape)
-                print("CRS:", src.crs)
-                print("Bounds:", src.bounds)
-                print("Value range:", src.read(1).min(), src.read(1).max())
+    # Reproject to EPSG:3338 using nearest-neighbor resampling
+    seasonal_stat_3338 = seasonal_stat.rio.reproject(
+        "EPSG:3338",
+        resolution=(1000, 1000),
+        resampling=Resampling.nearest
+    )
+
+    print("Value range after reprojection:", seasonal_stat_3338.min().values, seasonal_stat_3338.max().values)
+
+    # Output raster filename
+    year = netcdf_file.split("_")[-2]  # Extract year from filename
+    output_raster = os.path.join(output_dir, f"{variable}_{year}_{season}.tif")
+
+    # Save raster
+    print(f"Saving raster to {output_raster}")
+    seasonal_stat_3338.rio.to_raster(
+        output_raster,
+        nodata=-9999,  # Explicitly set nodata value
+        dtype="float32"
+    )
+    print(f"Raster saved: {output_raster}")
+
+    # Debugging output raster
+    from rasterio import open as rio_open
+    with rio_open(output_raster) as src:
+        print("Output raster info:")
+        print("Shape:", src.shape)
+        print("CRS:", src.crs)
+        print("Bounds:", src.bounds)
+        print("Value range:", src.read(1).min(), src.read(1).max())
 
 
-# Hardcoded parameters
-NETCDF_DIR = "/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/data/raw"
-VARIABLE = "total_precipitation"
-OUTPUT_DIR = "/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/data/processed"
-YEAR_RANGE = (2000, 2001)
+# Hardcoded parameters for a single run (for troubleshooting)
+NETCDF_FILE = "/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/data/raw/monthly/2m_temperature_2010_monthly.nc"
+VARIABLE = "2m_temperature"
+SEASON = "DJF"
+OUTPUT_DIR = "/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/data/dump"
 
-generate_monthly_rasters(NETCDF_DIR, VARIABLE, OUTPUT_DIR, YEAR_RANGE)
+generate_seasonal_raster(NETCDF_FILE, VARIABLE, SEASON, OUTPUT_DIR)

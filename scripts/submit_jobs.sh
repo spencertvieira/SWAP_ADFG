@@ -19,7 +19,7 @@ for VARIABLE in "${VARIABLES[@]}"; do
     START_YEAR=${START_YEARS[$i]}
     END_YEAR=${END_YEARS[$i]}
 
-    JOB_ID=$(sbatch /beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/scripts/preprocessing/run_era5_download.slurm \
+    JOB_ID=$(sbatch /beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/scripts/run_era5_download.slurm \
       "$VARIABLE" "$START_YEAR" "$END_YEAR" | awk '{print $4}')
 
     echo "Submitted job for $VARIABLE ($START_YEAR - $END_YEAR) with Job ID: $JOB_ID" | tee -a "$LOG_FILE"
