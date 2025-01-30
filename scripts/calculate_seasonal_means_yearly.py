@@ -118,7 +118,12 @@ def calculate_seasonal_means_yearly(netcdf_dir, variable, shapefile_path, season
         # Select months correctly
         months = SEASONS[season]
         seasonal_subset = data.sel({time_dim: data[time_dim].dt.month.isin(months)})
-        seasonal_stat = seasonal_subset.mean(dim=time_dim, skipna=True)
+
+        # Apply sum for precipitation/snowfall, mean for others
+        if variable in ["total_precipitation", "snowfall", "evaporation"]:
+            seasonal_stat = seasonal_subset.sum(dim=time_dim, skipna=True)  # SUM over season
+        else:
+            seasonal_stat = seasonal_subset.mean(dim=time_dim, skipna=True)  # MEAN for other variables
 
         # Perform zonal statistics
         stats = zonal_stats(

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set variables
-NETCDF_DIR="/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/data/raw/monthly/monthly_era5_AK"
+NETCDF_DIR="/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/data/raw/monthly"
 SHAPEFILE="/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/data/resources/BiogeographicRegions_AKSWAP_ABRedited_edited_clipped_again_again_again_again_again_again.shp"
 OUTPUT_DIR="/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/data/outputs"
 LOG_DIR="/beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/logs"

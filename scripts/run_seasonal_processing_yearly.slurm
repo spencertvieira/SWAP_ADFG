@@ -38,7 +38,7 @@ IFS=' ' read -r -a SEASON_ARRAY <<< "$SEASONS"
 for SEASON in "${SEASON_ARRAY[@]}"; do
   echo "Processing variable: $VARIABLE for season: $SEASON"
   
-  python /beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/scripts/preprocessing/calculate_seasonal_means_yearly.py \
+  python /beegfs/CMIP6/stvieira/projects/2025/SWAP_ADFG/scripts/calculate_seasonal_means_yearly.py \
     --netcdf_dir "$NETCDF_DIR" --variable "$VARIABLE" --shapefile "$SHAPEFILE" \
     --season "$SEASON" --output_csv "$OUTPUT_CSV"
 done
