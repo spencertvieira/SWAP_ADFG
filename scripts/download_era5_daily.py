@@ -97,10 +97,10 @@ def convert_to_daily(hourly_file, daily_file, variable):
 
         # Convert hourly time series to daily data
         if variable in SUM_VARIABLES:
-            ds_daily = ds.resample(time="1D").sum()  # Sum for precipitation, snowfall, evaporation
+            ds_daily = ds.resample(valid_time="1D").sum()  # Sum for precipitation, snowfall, evaporation
             logging.info(f"Applying SUM for {variable}")
         else:
-            ds_daily = ds.resample(time="1D").mean()  # Mean for other variables
+            ds_daily = ds.resample(valid_time="1D").mean()  # Mean for other variables
             logging.info(f"Applying MEAN for {variable}")
 
         # Save as daily NetCDF file
